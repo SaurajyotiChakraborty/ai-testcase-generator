@@ -1,0 +1,19 @@
+{
+  "name": "ai-testcase-generator",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+
+    "@google/genai": "^2.15.0",
+    "dotenv": "^17.4.2",
+
+    "ts-morph": "^28.0.0"
+  }
+}
