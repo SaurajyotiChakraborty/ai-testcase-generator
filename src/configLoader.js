@@ -13,11 +13,12 @@ function loadConfig(targetPath) {
         target: "./src",
         output: "generated-tests",
         framework: "auto",
-        model: "gemini-3.6-flash",
-        apiKey: process.env.GEMINI_API_KEY || "",
+        provider: "gemini",
+        model: "",
+        apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || "",
         ignore: [],
         testTypes: ["positive", "negative", "edge", "exception"],
-        concurrency: 1
+        concurrency: 3
     };
 
     let userConfig = {};

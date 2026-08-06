@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-function writeTestFile(testCode, fileName) {
+function writeTestFile(testCode, fileName, outputDir) {
 
     const testFileName =
         fileName.replace(
@@ -9,13 +9,10 @@ function writeTestFile(testCode, fileName) {
             ".test.js"
         );
 
-    const outputFolder =
-        "./generated-tests";
+    const outputFolder = outputDir || "./generated-tests";
 
     if (!fs.existsSync(outputFolder)) {
-
-        fs.mkdirSync(outputFolder);
-
+        fs.mkdirSync(outputFolder, { recursive: true });
     }
 
     const outputPath =

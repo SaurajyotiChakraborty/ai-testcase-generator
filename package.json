@@ -22,17 +22,25 @@
     "jest",
     "vitest"
   ],
-  "author": "Antigravity",
+  "author": "SaurajyotiChakraborty",
   "license": "ISC",
   "description": "Automatically generate comprehensive, framework-aware unit tests using AI and deep AST parsing.",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/example/ai-testcase-generator.git"
-  },
   "dependencies": {
     "@google/genai": "^2.15.0",
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
     "ts-morph": "^28.0.0"
+  },
+  "peerDependencies": {
+    "openai": ">=4.0.0",
+    "@anthropic-ai/sdk": ">=0.20.0"
+  },
+  "peerDependenciesMeta": {
+    "openai": {
+      "optional": true
+    },
+    "@anthropic-ai/sdk": {
+      "optional": true
+    }
   }
 }

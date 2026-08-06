@@ -1,7 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const { getAIClient } = require("./gemini");
+const { generateWithAI } = require("./aiProvider");
 
 const {
     scanFolder
@@ -45,6 +45,7 @@ const internalFiles = [
     "generateTestCases.js",
     "generatePrompt.js",
     "gemini.js",
+    "aiProvider.js",
     "getFileAnalysis.js",
     "readAnalysis.js",
     "writeTestFile.js",
@@ -63,21 +64,14 @@ const internalFiles = [
 async function generateTestCases(options = {}) {
     const targetPath = options.targetPath || "./src";
     const framework = options.framework || "jest";
-    const model = options.model || "gemini-3.6-flash";
+    const provider = options.provider || "gemini";
+    const model = options.model;
     const outputDir = options.outputDir || "./generated-tests";
     const ignore = options.ignore || [];
     const verbose = options.verbose !== false;
     const concurrency = options.concurrency || 3;
     const noCache = options.noCache === true;
-    const apiKey = options.apiKey || process.env.GEMINI_API_KEY;
-
-    let ai;
-    try {
-        ai = getAIClient(apiKey);
-    } catch (e) {
-        console.error(e.message);
-        return;
-    }
+    const apiKey = options.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY;
 
     function log(...args) {
         if (verbose) console.log(...args);
@@ -125,19 +119,20 @@ async function generateTestCases(options = {}) {
 
             try {
                 // We will accumulate test code for all functions in the file
-                let fullTestCode = `// AI-Generated Tests for ${fileName}\n// Framework: ${framework}\n\n`;
+                let fullTestCode = `// AI-Generated Tests for ${fileName}\n// Framework: ${framework}\n// Provider: ${provider}\n\n`;
 
                 for (const funcAnalysis of analysis) {
                     log(`  -> Generating tests for function: ${funcAnalysis.name}`);
 
                     const prompt = buildPromptV2(funcAnalysis, { framework });
 
-                    const response = await ai.models.generateContent({
-                        model: model,
-                        contents: prompt
+                    const responseText = await generateWithAI(prompt, {
+                        provider,
+                        apiKey,
+                        model
                     });
 
-                    const cleaned = (response.text || "")
+                    const cleaned = responseText
                         .replace(/```javascript/g, "")
                         .replace(/```js/g, "")
                         .replace(/```/g, "")
@@ -146,7 +141,7 @@ async function generateTestCases(options = {}) {
                     fullTestCode += cleaned + "\n\n";
                 }
 
-                writeTestFile(fullTestCode, fileName);
+                writeTestFile(fullTestCode, fileName, outputDir);
 
                 if (!noCache) {
                     updateFileHash(file);
@@ -163,6 +158,7 @@ async function generateTestCases(options = {}) {
 
     if (tasks.length > 0) {
         log(`\nStarting generation for ${tasks.length} file(s) with concurrency limit of ${concurrency}...`);
+        log(`Provider: ${provider} | Model: ${model || "(default)"}`);
         await runWithLimit(tasks, concurrency);
     } else {
         log(`\nNo files require test generation.`);

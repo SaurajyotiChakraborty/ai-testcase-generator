@@ -5,18 +5,22 @@ const { runParser } = require('./parser');
 const { generateTestCases } = require('./generateTestCases');
 const { detectFramework } = require('./frameworkDetector');
 const { loadConfig } = require('./configLoader');
+const { getDefaultModel } = require('./aiProvider');
+
+require("dotenv").config();
 
 const program = new Command();
 
 program
     .name('ai-testcase-generator')
-    .description('Automatically generate unit tests using AI')
+    .description('Automatically generate unit tests using AI (Gemini, OpenAI, Claude)')
     .version('1.0.0')
     .argument('[path]', 'Target directory or file to analyze', './src')
+    .option('-p, --provider <name>', 'AI provider (gemini, openai, anthropic)', 'gemini')
     .option('-f, --framework <name>', 'Testing framework (jest, vitest, mocha, jasmine, auto)', 'auto')
     .option('-o, --output <dir>', 'Output directory', 'generated-tests')
-    .option('-m, --model <name>', 'AI model to use', 'gemini-3.6-flash')
-    .option('-k, --api-key <key>', 'Gemini API Key')
+    .option('-m, --model <name>', 'AI model to use (auto-selects best for provider)')
+    .option('-k, --api-key <key>', 'API Key for the selected provider')
     .option('-a, --analyze-only', 'Run analysis only, do not generate tests')
     .option('-i, --ignore <paths...>', 'Additional folders/files to ignore')
     .option('-c, --concurrency <number>', 'Number of concurrent files to process', parseInt)
@@ -39,19 +43,20 @@ program
         const ignore = options.ignore ? options.ignore : config.ignore;
         let framework = options.framework !== 'auto' ? options.framework : config.framework;
         const outputDir = options.output !== 'generated-tests' ? options.output : config.output;
-        const model = options.model !== 'gemini-3.6-flash' ? options.model : config.model;
+        const provider = options.provider !== 'gemini' ? options.provider : config.provider;
+        const model = options.model ? options.model : config.model;
         const apiKey = options.apiKey ? options.apiKey : config.apiKey;
         const concurrency = options.concurrency !== undefined ? options.concurrency : config.concurrency;
         const noCache = options.cache === false;
 
         console.log(`\n🚀 Starting AI Test Case Generator...`);
         console.log(`Target path: ${targetPath}`);
+        console.log(`AI Provider: ${provider} | Model: ${model || getDefaultModel(provider)}`);
 
         if (framework === 'auto') {
             console.log(`Auto-detecting framework...`);
-            // If running in default ./src, look at root (.) for package.json
-            const detectPath = targetPath === './src' ? '.' : targetPath;
-            framework = detectFramework(detectPath);
+            const fwDetectPath = targetPath === './src' ? '.' : targetPath;
+            framework = detectFramework(fwDetectPath);
             console.log(`Detected framework: ${framework}`);
         } else {
             console.log(`Selected framework: ${framework}`);
@@ -72,6 +77,7 @@ program
         await generateTestCases({
             targetPath: targetPath,
             framework: framework,
+            provider: provider,
             model: model,
             apiKey: apiKey,
             outputDir: outputDir,

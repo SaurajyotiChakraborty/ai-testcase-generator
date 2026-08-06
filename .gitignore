@@ -2,4 +2,5 @@ node_modules/
 .env
 .aitestcache.json
 generated-tests/
+analysis.json
 PROJECT_MASTER_SPEC.md

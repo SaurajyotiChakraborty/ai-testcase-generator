@@ -1,5 +1,14 @@
 .env
 .aitestcache.json
 generated-tests/
+analysis.json
 PROJECT_MASTER_SPEC.md
 *.test.js
+
+# Sample / debug files (not needed by end users)
+src/auth.js
+src/login.js
+src/sample.js
+src/testPrompt.js
+src/testScanner.js
+src/generatePrompt.js

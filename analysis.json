@@ -1,5 +1,414 @@
 [
     {
+        "name": "getDefaultModel",
+        "file": "aiProvider.js",
+        "type": "normal",
+        "parameters": [
+            "provider"
+        ],
+        "body": "{\n    return DEFAULT_MODELS[provider] || DEFAULT_MODELS.gemini;\n}",
+        "conditions": [],
+        "returns": [
+            "DEFAULT_MODELS[provider] || DEFAULT_MODELS.gemini"
+        ],
+        "throws": [],
+        "call": [],
+        "exports": true,
+        "controlFlow": {
+            "branches": [],
+            "loops": [],
+            "tryCatch": [],
+            "pathCount": 1
+        },
+        "dataFlow": {
+            "variables": [],
+            "parameterUsage": [
+                {
+                    "name": "provider",
+                    "used": true,
+                    "usageCount": 2
+                }
+            ]
+        },
+        "complexity": {
+            "cyclomatic": 2,
+            "maxNestingDepth": 0,
+            "linesOfCode": 3,
+            "classification": "simple"
+        }
+    },
+    {
+        "name": "generateWithAI",
+        "file": "aiProvider.js",
+        "type": "normal",
+        "parameters": [
+            "prompt",
+            "options"
+        ],
+        "body": "{\n    const provider = options.provider || \"gemini\";\n    const apiKey = options.apiKey;\n    const model = options.model || getDefaultModel(provider);\n\n    if (!apiKey) {\n        throw new Error(\n            `API key is missing. Please provide it via:\\n` +\n            `  --api-key <key>\\n` +\n            `  aitest.config.js { apiKey: \"...\" }\\n` +\n            `  Environment variable: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY`\n        );\n    }\n\n    switch (provider) {\n        case \"gemini\":\n            return await callGemini(prompt, apiKey, model);\n        case \"openai\":\n            return await callOpenAI(prompt, apiKey, model);\n        case \"anthropic\":\n            return await callAnthropic(prompt, apiKey, model);\n        default:\n            throw new Error(`Unknown provider \"${provider}\". Supported: gemini, openai, anthropic`);\n    }\n}",
+        "conditions": [
+            "!apiKey"
+        ],
+        "returns": [
+            "await callGemini(prompt, apiKey, model)",
+            "await callOpenAI(prompt, apiKey, model)",
+            "await callAnthropic(prompt, apiKey, model)"
+        ],
+        "throws": [
+            "new Error(\n            `API key is missing. Please provide it via:\\n` +\n            `  --api-key <key>\\n` +\n            `  aitest.config.js { apiKey: \"...\" }\\n` +\n            `  Environment variable: GEMINI_API_KEY / OPENAI_API_KEY / ANTHROPIC_API_KEY`\n        )",
+            "new Error(`Unknown provider \"${provider}\". Supported: gemini, openai, anthropic`)"
+        ],
+        "call": [
+            "getDefaultModel",
+            "callGemini",
+            "callOpenAI",
+            "callAnthropic"
+        ],
+        "exports": true,
+        "controlFlow": {
+            "branches": [
+                {
+                    "type": "if-else",
+                    "condition": "!apiKey",
+                    "hasElse": false,
+                    "elseIfCount": 0
+                },
+                {
+                    "type": "switch",
+                    "expression": "provider",
+                    "cases": [
+                        "\"gemini\"",
+                        "\"openai\"",
+                        "\"anthropic\""
+                    ],
+                    "hasDefault": true
+                }
+            ],
+            "loops": [],
+            "tryCatch": [],
+            "pathCount": 8
+        },
+        "dataFlow": {
+            "variables": [
+                {
+                    "name": "provider",
+                    "kind": "const",
+                    "initialValue": "options.provider || \"gemini\"",
+                    "reassigned": false,
+                    "usageCount": 4
+                },
+                {
+                    "name": "apiKey",
+                    "kind": "const",
+                    "initialValue": "options.apiKey",
+                    "reassigned": false,
+                    "usageCount": 5
+                },
+                {
+                    "name": "model",
+                    "kind": "const",
+                    "initialValue": "options.model || getDefaultModel(provider)",
+                    "reassigned": false,
+                    "usageCount": 4
+                }
+            ],
+            "parameterUsage": [
+                {
+                    "name": "prompt",
+                    "used": true,
+                    "usageCount": 5
+                },
+                {
+                    "name": "options",
+                    "used": true,
+                    "usageCount": 5
+                }
+            ]
+        },
+        "complexity": {
+            "cyclomatic": 7,
+            "maxNestingDepth": 1,
+            "linesOfCode": 25,
+            "classification": "moderate"
+        }
+    },
+    {
+        "name": "callGemini",
+        "file": "aiProvider.js",
+        "type": "normal",
+        "parameters": [
+            "prompt",
+            "apiKey",
+            "model"
+        ],
+        "body": "{\n    const { GoogleGenAI } = require(\"@google/genai\");\n    const ai = new GoogleGenAI({ apiKey });\n\n    const response = await ai.models.generateContent({\n        model: model,\n        contents: prompt\n    });\n\n    return response.text || \"\";\n}",
+        "conditions": [],
+        "returns": [
+            "response.text || \"\""
+        ],
+        "throws": [],
+        "call": [
+            "require",
+            "ai.models.generateContent"
+        ],
+        "exports": false,
+        "controlFlow": {
+            "branches": [],
+            "loops": [],
+            "tryCatch": [],
+            "pathCount": 1
+        },
+        "dataFlow": {
+            "variables": [
+                {
+                    "name": "{ GoogleGenAI }",
+                    "kind": "const",
+                    "initialValue": "require(\"@google/genai\")",
+                    "reassigned": false,
+                    "usageCount": 0
+                },
+                {
+                    "name": "ai",
+                    "kind": "const",
+                    "initialValue": "new GoogleGenAI({ apiKey })",
+                    "reassigned": false,
+                    "usageCount": 1
+                },
+                {
+                    "name": "response",
+                    "kind": "const",
+                    "initialValue": "await ai.models.generateContent({\n        model: model,\n        contents: prompt...",
+                    "reassigned": false,
+                    "usageCount": 1
+                }
+            ],
+            "parameterUsage": [
+                {
+                    "name": "prompt",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "apiKey",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "model",
+                    "used": true,
+                    "usageCount": 3
+                }
+            ]
+        },
+        "complexity": {
+            "cyclomatic": 2,
+            "maxNestingDepth": 0,
+            "linesOfCode": 11,
+            "classification": "simple"
+        }
+    },
+    {
+        "name": "callOpenAI",
+        "file": "aiProvider.js",
+        "type": "normal",
+        "parameters": [
+            "prompt",
+            "apiKey",
+            "model"
+        ],
+        "body": "{\n    let OpenAI;\n    try {\n        OpenAI = require(\"openai\");\n    } catch (e) {\n        throw new Error(\n            `The \"openai\" package is not installed.\\n` +\n            `To use OpenAI/ChatGPT as your provider, run:\\n\\n` +\n            `  npm install openai\\n`\n        );\n    }\n\n    const client = new OpenAI({ apiKey });\n\n    const response = await client.chat.completions.create({\n        model: model,\n        messages: [\n            {\n                role: \"system\",\n                content: \"You are an expert software test engineer. Generate only raw JavaScript test code. Do not include markdown formatting.\"\n            },\n            {\n                role: \"user\",\n                content: prompt\n            }\n        ],\n        temperature: 0.3\n    });\n\n    return response.choices[0]?.message?.content || \"\";\n}",
+        "conditions": [],
+        "returns": [
+            "response.choices[0]?.message?.content || \"\""
+        ],
+        "throws": [
+            "new Error(\n            `The \"openai\" package is not installed.\\n` +\n            `To use OpenAI/ChatGPT as your provider, run:\\n\\n` +\n            `  npm install openai\\n`\n        )"
+        ],
+        "call": [
+            "require",
+            "client.chat.completions.create"
+        ],
+        "exports": false,
+        "controlFlow": {
+            "branches": [],
+            "loops": [],
+            "tryCatch": [
+                {
+                    "hasCatch": true,
+                    "hasFinally": false,
+                    "catchParam": "e"
+                }
+            ],
+            "pathCount": 1
+        },
+        "dataFlow": {
+            "variables": [
+                {
+                    "name": "OpenAI",
+                    "kind": "let",
+                    "initialValue": "undefined",
+                    "reassigned": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "e",
+                    "kind": "unknown",
+                    "initialValue": "undefined",
+                    "reassigned": false,
+                    "usageCount": 0
+                },
+                {
+                    "name": "client",
+                    "kind": "const",
+                    "initialValue": "new OpenAI({ apiKey })",
+                    "reassigned": false,
+                    "usageCount": 1
+                },
+                {
+                    "name": "response",
+                    "kind": "const",
+                    "initialValue": "await client.chat.completions.create({\n        model: model,\n        messages: [...",
+                    "reassigned": false,
+                    "usageCount": 1
+                }
+            ],
+            "parameterUsage": [
+                {
+                    "name": "prompt",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "apiKey",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "model",
+                    "used": true,
+                    "usageCount": 3
+                }
+            ]
+        },
+        "complexity": {
+            "cyclomatic": 3,
+            "maxNestingDepth": 1,
+            "linesOfCode": 31,
+            "classification": "simple"
+        }
+    },
+    {
+        "name": "callAnthropic",
+        "file": "aiProvider.js",
+        "type": "normal",
+        "parameters": [
+            "prompt",
+            "apiKey",
+            "model"
+        ],
+        "body": "{\n    let Anthropic;\n    try {\n        ({ default: Anthropic } = require(\"@anthropic-ai/sdk\"));\n    } catch (e) {\n        try {\n            Anthropic = require(\"@anthropic-ai/sdk\");\n        } catch (e2) {\n            throw new Error(\n                `The \"@anthropic-ai/sdk\" package is not installed.\\n` +\n                `To use Anthropic/Claude as your provider, run:\\n\\n` +\n                `  npm install @anthropic-ai/sdk\\n`\n            );\n        }\n    }\n\n    const client = new Anthropic({ apiKey });\n\n    const response = await client.messages.create({\n        model: model,\n        max_tokens: 8192,\n        messages: [\n            {\n                role: \"user\",\n                content: prompt\n            }\n        ],\n        system: \"You are an expert software test engineer. Generate only raw JavaScript test code. Do not include markdown formatting.\"\n    });\n\n    // Claude returns content as an array of content blocks\n    const textBlock = response.content.find(block => block.type === \"text\");\n    return textBlock?.text || \"\";\n}",
+        "conditions": [],
+        "returns": [
+            "textBlock?.text || \"\""
+        ],
+        "throws": [
+            "new Error(\n                `The \"@anthropic-ai/sdk\" package is not installed.\\n` +\n                `To use Anthropic/Claude as your provider, run:\\n\\n` +\n                `  npm install @anthropic-ai/sdk\\n`\n            )"
+        ],
+        "call": [
+            "require",
+            "require",
+            "client.messages.create",
+            "response.content.find"
+        ],
+        "exports": false,
+        "controlFlow": {
+            "branches": [],
+            "loops": [],
+            "tryCatch": [
+                {
+                    "hasCatch": true,
+                    "hasFinally": false,
+                    "catchParam": "e"
+                },
+                {
+                    "hasCatch": true,
+                    "hasFinally": false,
+                    "catchParam": "e2"
+                }
+            ],
+            "pathCount": 1
+        },
+        "dataFlow": {
+            "variables": [
+                {
+                    "name": "Anthropic",
+                    "kind": "let",
+                    "initialValue": "undefined",
+                    "reassigned": true,
+                    "usageCount": 3
+                },
+                {
+                    "name": "e",
+                    "kind": "unknown",
+                    "initialValue": "undefined",
+                    "reassigned": false,
+                    "usageCount": 0
+                },
+                {
+                    "name": "e2",
+                    "kind": "unknown",
+                    "initialValue": "undefined",
+                    "reassigned": false,
+                    "usageCount": 0
+                },
+                {
+                    "name": "client",
+                    "kind": "const",
+                    "initialValue": "new Anthropic({ apiKey })",
+                    "reassigned": false,
+                    "usageCount": 1
+                },
+                {
+                    "name": "response",
+                    "kind": "const",
+                    "initialValue": "await client.messages.create({\n        model: model,\n        max_tokens: 8192,\n ...",
+                    "reassigned": false,
+                    "usageCount": 1
+                },
+                {
+                    "name": "textBlock",
+                    "kind": "const",
+                    "initialValue": "response.content.find(block => block.type === \"text\")",
+                    "reassigned": false,
+                    "usageCount": 1
+                }
+            ],
+            "parameterUsage": [
+                {
+                    "name": "prompt",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "apiKey",
+                    "used": true,
+                    "usageCount": 2
+                },
+                {
+                    "name": "model",
+                    "used": true,
+                    "usageCount": 3
+                }
+            ]
+        },
+        "complexity": {
+            "cyclomatic": 4,
+            "maxNestingDepth": 2,
+            "linesOfCode": 34,
+            "classification": "simple"
+        }
+    },
+    {
         "name": "validateUser",
         "file": "auth.js",
         "type": "normal",
@@ -1277,7 +1686,7 @@
         "parameters": [
             "targetPath"
         ],
-        "body": "{\r\n\r\n    // Default configuration\r\n    const defaultConfig = {\r\n        target: \"./src\",\r\n        output: \"generated-tests\",\r\n        framework: \"auto\",\r\n        model: \"gemini-3.6-flash\",\r\n        apiKey: process.env.GEMINI_API_KEY || \"\",\r\n        ignore: [],\r\n        testTypes: [\"positive\", \"negative\", \"edge\", \"exception\"],\r\n        concurrency: 1\r\n    };\r\n\r\n    let userConfig = {};\r\n\r\n    try {\r\n        const jsConfigPath = path.join(targetPath, 'aitest.config.js');\r\n        const jsonConfigPath = path.join(targetPath, 'aitest.config.json');\r\n\r\n        if (fs.existsSync(jsConfigPath)) {\r\n            userConfig = require(path.resolve(jsConfigPath));\r\n        } else if (fs.existsSync(jsonConfigPath)) {\r\n            userConfig = JSON.parse(fs.readFileSync(jsonConfigPath, 'utf-8'));\r\n        }\r\n    } catch (error) {\r\n        console.warn(`\\n⚠️ Warning: Found a configuration file but failed to load it: ${error.message}`);\r\n    }\r\n\r\n    // Merge default and user configs\r\n    return { ...defaultConfig, ...userConfig };\r\n}",
+        "body": "{\r\n\r\n    // Default configuration\r\n    const defaultConfig = {\r\n        target: \"./src\",\r\n        output: \"generated-tests\",\r\n        framework: \"auto\",\r\n        provider: \"gemini\",\r\n        model: \"\",\r\n        apiKey: process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || \"\",\r\n        ignore: [],\r\n        testTypes: [\"positive\", \"negative\", \"edge\", \"exception\"],\r\n        concurrency: 3\r\n    };\r\n\r\n    let userConfig = {};\r\n\r\n    try {\r\n        const jsConfigPath = path.join(targetPath, 'aitest.config.js');\r\n        const jsonConfigPath = path.join(targetPath, 'aitest.config.json');\r\n\r\n        if (fs.existsSync(jsConfigPath)) {\r\n            userConfig = require(path.resolve(jsConfigPath));\r\n        } else if (fs.existsSync(jsonConfigPath)) {\r\n            userConfig = JSON.parse(fs.readFileSync(jsonConfigPath, 'utf-8'));\r\n        }\r\n    } catch (error) {\r\n        console.warn(`\\n⚠️ Warning: Found a configuration file but failed to load it: ${error.message}`);\r\n    }\r\n\r\n    // Merge default and user configs\r\n    return { ...defaultConfig, ...userConfig };\r\n}",
         "conditions": [
             "fs.existsSync(jsConfigPath)",
             "fs.existsSync(jsonConfigPath)"
@@ -1364,10 +1773,10 @@
             ]
         },
         "complexity": {
-            "cyclomatic": 5,
+            "cyclomatic": 7,
             "maxNestingDepth": 3,
-            "linesOfCode": 32,
-            "classification": "simple"
+            "linesOfCode": 33,
+            "classification": "moderate"
         }
     },
     {
@@ -3074,11 +3483,11 @@
         "parameters": [
             "options"
         ],
-        "body": "{\r\n    const targetPath = options.targetPath || \"./src\";\r\n    const framework = options.framework || \"jest\";\r\n    const model = options.model || \"gemini-3.6-flash\";\r\n    const outputDir = options.outputDir || \"./generated-tests\";\r\n    const ignore = options.ignore || [];\r\n    const verbose = options.verbose !== false;\r\n    const concurrency = options.concurrency || 3;\r\n    const noCache = options.noCache === true;\r\n    const apiKey = options.apiKey || process.env.GEMINI_API_KEY;\r\n\r\n    let ai;\r\n    try {\r\n        ai = getAIClient(apiKey);\r\n    } catch (e) {\r\n        console.error(e.message);\r\n        return;\r\n    }\r\n\r\n    function log(...args) {\r\n        if (verbose) console.log(...args);\r\n    }\r\n\r\n    if (!noCache) {\r\n        loadCache(targetPath);\r\n    }\r\n\r\n    const files = scanFolder(targetPath, ignore);\r\n\r\n    // Create an array of tasks for concurrent execution\r\n    const tasks = [];\r\n\r\n    for (const file of files) {\r\n        const fileName = path.basename(file);\r\n\r\n        // Skip test files and internal tool files\r\n        if (\r\n            fileName.includes(\".test.\") ||\r\n            internalFiles.includes(fileName)\r\n        ) {\r\n            continue;\r\n        }\r\n\r\n        const analysis = getFileAnalysis(fileName);\r\n\r\n        if (!analysis || analysis.length === 0) {\r\n            log(`Skipping ${fileName} (No functions found)`);\r\n            continue;\r\n        }\r\n\r\n        // Check cache\r\n        const testFileName = fileName.replace(path.extname(fileName), \".test.js\");\r\n        const outputPath = path.join(outputDir, testFileName);\r\n\r\n        if (!noCache && fs.existsSync(outputPath) && !isFileChanged(file)) {\r\n            log(`⏭️  Skipping ${fileName} (Unchanged / Cached)`);\r\n            continue;\r\n        }\r\n\r\n        // Add generation task to the queue\r\n        tasks.push(async () => {\r\n            log(`\\nGenerating tests for ${fileName}...`);\r\n\r\n            try {\r\n                // We will accumulate test code for all functions in the file\r\n                let fullTestCode = `// AI-Generated Tests for ${fileName}\\n// Framework: ${framework}\\n\\n`;\r\n\r\n                for (const funcAnalysis of analysis) {\r\n                    log(`  -> Generating tests for function: ${funcAnalysis.name}`);\r\n\r\n                    const prompt = buildPromptV2(funcAnalysis, { framework });\r\n\r\n                    const response = await ai.models.generateContent({\r\n                        model: model,\r\n                        contents: prompt\r\n                    });\r\n\r\n                    const cleaned = (response.text || \"\")\r\n                        .replace(/```javascript/g, \"\")\r\n                        .replace(/```js/g, \"\")\r\n                        .replace(/```/g, \"\")\r\n                        .trim();\r\n\r\n                    fullTestCode += cleaned + \"\\n\\n\";\r\n                }\r\n\r\n                writeTestFile(fullTestCode, fileName);\r\n\r\n                if (!noCache) {\r\n                    updateFileHash(file);\r\n                }\r\n\r\n                log(`✅ ${fileName} completed`);\r\n\r\n            } catch (error) {\r\n                log(`❌ Failed to generate tests for ${fileName}`);\r\n                log(error.message);\r\n            }\r\n        });\r\n    }\r\n\r\n    if (tasks.length > 0) {\r\n        log(`\\nStarting generation for ${tasks.length} file(s) with concurrency limit of ${concurrency}...`);\r\n        await runWithLimit(tasks, concurrency);\r\n    } else {\r\n        log(`\\nNo files require test generation.`);\r\n    }\r\n\r\n    if (!noCache) {\r\n        saveCache();\r\n    }\r\n\r\n    log(\"\\n🎉 Finished generating all test files.\");\r\n}",
+        "body": "{\n    const targetPath = options.targetPath || \"./src\";\n    const framework = options.framework || \"jest\";\n    const provider = options.provider || \"gemini\";\n    const model = options.model;\n    const outputDir = options.outputDir || \"./generated-tests\";\n    const ignore = options.ignore || [];\n    const verbose = options.verbose !== false;\n    const concurrency = options.concurrency || 3;\n    const noCache = options.noCache === true;\n    const apiKey = options.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY;\n\n    function log(...args) {\n        if (verbose) console.log(...args);\n    }\n\n    if (!noCache) {\n        loadCache(targetPath);\n    }\n\n    const files = scanFolder(targetPath, ignore);\n\n    // Create an array of tasks for concurrent execution\n    const tasks = [];\n\n    for (const file of files) {\n        const fileName = path.basename(file);\n\n        // Skip test files and internal tool files\n        if (\n            fileName.includes(\".test.\") ||\n            internalFiles.includes(fileName)\n        ) {\n            continue;\n        }\n\n        const analysis = getFileAnalysis(fileName);\n\n        if (!analysis || analysis.length === 0) {\n            log(`Skipping ${fileName} (No functions found)`);\n            continue;\n        }\n\n        // Check cache\n        const testFileName = fileName.replace(path.extname(fileName), \".test.js\");\n        const outputPath = path.join(outputDir, testFileName);\n\n        if (!noCache && fs.existsSync(outputPath) && !isFileChanged(file)) {\n            log(`⏭️  Skipping ${fileName} (Unchanged / Cached)`);\n            continue;\n        }\n\n        // Add generation task to the queue\n        tasks.push(async () => {\n            log(`\\nGenerating tests for ${fileName}...`);\n\n            try {\n                // We will accumulate test code for all functions in the file\n                let fullTestCode = `// AI-Generated Tests for ${fileName}\\n// Framework: ${framework}\\n// Provider: ${provider}\\n\\n`;\n\n                for (const funcAnalysis of analysis) {\n                    log(`  -> Generating tests for function: ${funcAnalysis.name}`);\n\n                    const prompt = buildPromptV2(funcAnalysis, { framework });\n\n                    const responseText = await generateWithAI(prompt, {\n                        provider,\n                        apiKey,\n                        model\n                    });\n\n                    const cleaned = responseText\n                        .replace(/```javascript/g, \"\")\n                        .replace(/```js/g, \"\")\n                        .replace(/```/g, \"\")\n                        .trim();\n\n                    fullTestCode += cleaned + \"\\n\\n\";\n                }\n\n                writeTestFile(fullTestCode, fileName, outputDir);\n\n                if (!noCache) {\n                    updateFileHash(file);\n                }\n\n                log(`✅ ${fileName} completed`);\n\n            } catch (error) {\n                log(`❌ Failed to generate tests for ${fileName}`);\n                log(error.message);\n            }\n        });\n    }\n\n    if (tasks.length > 0) {\n        log(`\\nStarting generation for ${tasks.length} file(s) with concurrency limit of ${concurrency}...`);\n        log(`Provider: ${provider} | Model: ${model || \"(default)\"}`);\n        await runWithLimit(tasks, concurrency);\n    } else {\n        log(`\\nNo files require test generation.`);\n    }\n\n    if (!noCache) {\n        saveCache();\n    }\n\n    log(\"\\n🎉 Finished generating all test files.\");\n}",
         "conditions": [
             "verbose",
             "!noCache",
-            "fileName.includes(\".test.\") ||\r\n            internalFiles.includes(fileName)",
+            "fileName.includes(\".test.\") ||\n            internalFiles.includes(fileName)",
             "!analysis || analysis.length === 0",
             "!noCache && fs.existsSync(outputPath) && !isFileChanged(file)",
             "!noCache",
@@ -3088,8 +3497,6 @@
         "returns": [],
         "throws": [],
         "call": [
-            "getAIClient",
-            "console.error",
             "console.log",
             "loadCache",
             "scanFolder",
@@ -3108,13 +3515,14 @@
             "log",
             "log",
             "buildPromptV2",
-            "ai.models.generateContent",
-            "(response.text || \"\")\r\n                        .replace(/```javascript/g, \"\")\r\n                        .replace(/```js/g, \"\")\r\n                        .replace(/```/g, \"\")\r\n                        .trim",
-            "(response.text || \"\")\r\n                        .replace(/```javascript/g, \"\")\r\n                        .replace(/```js/g, \"\")\r\n                        .replace",
-            "(response.text || \"\")\r\n                        .replace(/```javascript/g, \"\")\r\n                        .replace",
-            "(response.text || \"\")\r\n                        .replace",
+            "generateWithAI",
+            "responseText\n                        .replace(/```javascript/g, \"\")\n                        .replace(/```js/g, \"\")\n                        .replace(/```/g, \"\")\n                        .trim",
+            "responseText\n                        .replace(/```javascript/g, \"\")\n                        .replace(/```js/g, \"\")\n                        .replace",
+            "responseText\n                        .replace(/```javascript/g, \"\")\n                        .replace",
+            "responseText\n                        .replace",
             "writeTestFile",
             "updateFileHash",
+            "log",
             "log",
             "log",
             "log",
@@ -3141,7 +3549,7 @@
                 },
                 {
                     "type": "if-else",
-                    "condition": "fileName.includes(\".test.\") ||\r\n            internalFiles.includes(fileName)",
+                    "condition": "fileName.includes(\".test.\") ||\n            internalFiles.includes(fileName)",
                     "hasElse": false,
                     "elseIfCount": 0
                 },
@@ -3190,11 +3598,6 @@
                 {
                     "hasCatch": true,
                     "hasFinally": false,
-                    "catchParam": "e"
-                },
-                {
-                    "hasCatch": true,
-                    "hasFinally": false,
                     "catchParam": "error"
                 }
             ],
@@ -3217,9 +3620,16 @@
                     "usageCount": 3
                 },
                 {
+                    "name": "provider",
+                    "kind": "const",
+                    "initialValue": "options.provider || \"gemini\"",
+                    "reassigned": false,
+                    "usageCount": 4
+                },
+                {
                     "name": "model",
                     "kind": "const",
-                    "initialValue": "options.model || \"gemini-3.6-flash\"",
+                    "initialValue": "options.model",
                     "reassigned": false,
                     "usageCount": 3
                 },
@@ -3228,7 +3638,7 @@
                     "kind": "const",
                     "initialValue": "options.outputDir || \"./generated-tests\"",
                     "reassigned": false,
-                    "usageCount": 2
+                    "usageCount": 3
                 },
                 {
                     "name": "ignore",
@@ -3261,23 +3671,9 @@
                 {
                     "name": "apiKey",
                     "kind": "const",
-                    "initialValue": "options.apiKey || process.env.GEMINI_API_KEY",
+                    "initialValue": "options.apiKey || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || pr...",
                     "reassigned": false,
                     "usageCount": 2
-                },
-                {
-                    "name": "ai",
-                    "kind": "let",
-                    "initialValue": "undefined",
-                    "reassigned": true,
-                    "usageCount": 2
-                },
-                {
-                    "name": "e",
-                    "kind": "unknown",
-                    "initialValue": "undefined",
-                    "reassigned": false,
-                    "usageCount": 1
                 },
                 {
                     "name": "files",
@@ -3331,7 +3727,7 @@
                 {
                     "name": "fullTestCode",
                     "kind": "let",
-                    "initialValue": "`// AI-Generated Tests for ${fileName}\\n// Framework: ${framework}\\n\\n`",
+                    "initialValue": "`// AI-Generated Tests for ${fileName}\\n// Framework: ${framework}\\n// Provider:...",
                     "reassigned": true,
                     "usageCount": 2
                 },
@@ -3350,16 +3746,16 @@
                     "usageCount": 1
                 },
                 {
-                    "name": "response",
+                    "name": "responseText",
                     "kind": "const",
-                    "initialValue": "await ai.models.generateContent({\r\n                        model: model,\r\n      ...",
+                    "initialValue": "await generateWithAI(prompt, {\n                        provider,\n               ...",
                     "reassigned": false,
                     "usageCount": 1
                 },
                 {
                     "name": "cleaned",
                     "kind": "const",
-                    "initialValue": "(response.text || \"\")\r\n                        .replace(/```javascript/g, \"\")\r\n ...",
+                    "initialValue": "responseText\n                        .replace(/```javascript/g, \"\")\n            ...",
                     "reassigned": false,
                     "usageCount": 1
                 },
@@ -3368,21 +3764,21 @@
                     "kind": "unknown",
                     "initialValue": "undefined",
                     "reassigned": false,
-                    "usageCount": 2
+                    "usageCount": 1
                 }
             ],
             "parameterUsage": [
                 {
                     "name": "options",
                     "used": true,
-                    "usageCount": 10
+                    "usageCount": 11
                 }
             ]
         },
         "complexity": {
-            "cyclomatic": 25,
+            "cyclomatic": 26,
             "maxNestingDepth": 3,
-            "linesOfCode": 114,
+            "linesOfCode": 109,
             "classification": "very-complex"
         }
     },
@@ -4875,9 +5271,10 @@
         "type": "normal",
         "parameters": [
             "testCode",
-            "fileName"
+            "fileName",
+            "outputDir"
         ],
-        "body": "{\r\n\r\n    const testFileName =\r\n        fileName.replace(\r\n            path.extname(fileName),\r\n            \".test.js\"\r\n        );\r\n\r\n    const outputFolder =\r\n        \"./generated-tests\";\r\n\r\n    if (!fs.existsSync(outputFolder)) {\r\n\r\n        fs.mkdirSync(outputFolder);\r\n\r\n    }\r\n\r\n    const outputPath =\r\n        path.join(\r\n            outputFolder,\r\n            testFileName\r\n        );\r\n\r\n    fs.writeFileSync(\r\n        outputPath,\r\n        testCode,\r\n        \"utf8\"\r\n    );\r\n\r\n    console.log(\r\n        `${testFileName} created successfully.`\r\n    );\r\n}",
+        "body": "{\n\n    const testFileName =\n        fileName.replace(\n            path.extname(fileName),\n            \".test.js\"\n        );\n\n    const outputFolder = outputDir || \"./generated-tests\";\n\n    if (!fs.existsSync(outputFolder)) {\n        fs.mkdirSync(outputFolder, { recursive: true });\n    }\n\n    const outputPath =\n        path.join(\n            outputFolder,\n            testFileName\n        );\n\n    fs.writeFileSync(\n        outputPath,\n        testCode,\n        \"utf8\"\n    );\n\n    console.log(\n        `${testFileName} created successfully.`\n    );\n}",
         "conditions": [
             "!fs.existsSync(outputFolder)"
         ],
@@ -4911,21 +5308,21 @@
                 {
                     "name": "testFileName",
                     "kind": "const",
-                    "initialValue": "fileName.replace(\r\n            path.extname(fileName),\r\n            \".test.js\"\r\n...",
+                    "initialValue": "fileName.replace(\n            path.extname(fileName),\n            \".test.js\"\n   ...",
                     "reassigned": false,
                     "usageCount": 2
                 },
                 {
                     "name": "outputFolder",
                     "kind": "const",
-                    "initialValue": "\"./generated-tests\"",
+                    "initialValue": "outputDir || \"./generated-tests\"",
                     "reassigned": false,
                     "usageCount": 3
                 },
                 {
                     "name": "outputPath",
                     "kind": "const",
-                    "initialValue": "path.join(\r\n            outputFolder,\r\n            testFileName\r\n        )",
+                    "initialValue": "path.join(\n            outputFolder,\n            testFileName\n        )",
                     "reassigned": false,
                     "usageCount": 1
                 }
@@ -4940,13 +5337,18 @@
                     "name": "fileName",
                     "used": true,
                     "usageCount": 3
+                },
+                {
+                    "name": "outputDir",
+                    "used": true,
+                    "usageCount": 2
                 }
             ]
         },
         "complexity": {
-            "cyclomatic": 2,
+            "cyclomatic": 3,
             "maxNestingDepth": 1,
-            "linesOfCode": 33,
+            "linesOfCode": 30,
             "classification": "simple"
         }
     }
