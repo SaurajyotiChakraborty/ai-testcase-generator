@@ -102,7 +102,9 @@ ${body}
 5. Test **edge cases** (boundaries, empty strings/arrays, zero).
 6. Test **exceptions** (ensure errors are thrown when expected).
 7. Ensure all branches identified in the Control Flow Context are covered.
-8. Output ONLY the raw JavaScript test code. Do not include markdown formatting (like \`\`\`javascript). Do not include explanations.
+8. **FORMATTING**: Use the strictly formatted "Arrange, Act, Assert" (AAA) pattern for every test case. You MUST explicitly include \`// Arrange\`, \`// Act\`, and \`// Assert\` comments inside every single \`it\`/\`test\` block.
+9. **FORMATTING**: Ensure the generated code is perfectly indented (4 spaces) and formatted according to standard Prettier/ESLint rules. Ensure proper spacing between blocks.
+10. Output ONLY the raw JavaScript test code. Do not include markdown formatting (like \`\`\`javascript). Do not include explanations.
 
 Generate the tests now:
 `;
