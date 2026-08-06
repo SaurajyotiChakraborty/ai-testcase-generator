@@ -2,12 +2,25 @@ const fs = require("fs");
 
 function readAnalysis() {
 
-    const data = fs.readFileSync(
-        "./analysis.json",
-        "utf8"
-    );
+    try {
 
-    return JSON.parse(data);
+        const data = fs.readFileSync(
+            "./analysis.json",
+            "utf8"
+        );
+
+        return JSON.parse(data);
+
+    } catch (error) {
+
+        console.warn(
+            "Warning: Could not read analysis.json —",
+            error.message
+        );
+
+        return [];
+
+    }
 }
 
 module.exports = {

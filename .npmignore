@@ -1,5 +1,5 @@
-node_modules/
 .env
 .aitestcache.json
 generated-tests/
 PROJECT_MASTER_SPEC.md
+*.test.js

@@ -26,7 +26,13 @@ function registerFunction(
 
         call: [],
 
-        exports: false
+        exports: false,
+
+        controlFlow: null,
+
+        dataFlow: null,
+
+        complexity: null
 
     });
 
@@ -34,12 +40,14 @@ function registerFunction(
 
 function addCall(
     functionName,
+    fileName,
     calledFunction
 ) {
 
     const func =
         registry.find(
-            f => f.name === functionName
+            f => f.name === functionName &&
+                 f.file === fileName
         );
 
     if (func) {
@@ -54,12 +62,14 @@ function addCall(
 
 function addCondition(
     functionName,
+    fileName,
     condition
 ) {
 
     const func =
         registry.find(
-            f => f.name === functionName
+            f => f.name === functionName &&
+                 f.file === fileName
         );
 
     if (func) {
@@ -74,12 +84,14 @@ function addCondition(
 
 function addReturn(
     functionName,
+    fileName,
     value
 ) {
 
     const func =
         registry.find(
-            f => f.name === functionName
+            f => f.name === functionName &&
+                 f.file === fileName
         );
 
     if (func) {
@@ -94,12 +106,14 @@ function addReturn(
 
 function addThrow(
     functionName,
+    fileName,
     value
 ) {
 
     const func =
         registry.find(
-            f => f.name === functionName
+            f => f.name === functionName &&
+                 f.file === fileName
         );
 
     if (func) {
@@ -113,17 +127,79 @@ function addThrow(
 }
 
 function markExport(
-    functionName
+    functionName,
+    fileName
 ) {
 
     const func =
         registry.find(
-            f => f.name === functionName
+            f => f.name === functionName &&
+                 f.file === fileName
         );
 
     if (func) {
 
         func.exports = true;
+
+    }
+
+}
+
+function addControlFlow(
+    functionName,
+    fileName,
+    cfgData
+) {
+
+    const func =
+        registry.find(
+            f => f.name === functionName &&
+                 f.file === fileName
+        );
+
+    if (func) {
+
+        func.controlFlow = cfgData;
+
+    }
+
+}
+
+function addDataFlow(
+    functionName,
+    fileName,
+    dataFlowData
+) {
+
+    const func =
+        registry.find(
+            f => f.name === functionName &&
+                 f.file === fileName
+        );
+
+    if (func) {
+
+        func.dataFlow = dataFlowData;
+
+    }
+
+}
+
+function addComplexity(
+    functionName,
+    fileName,
+    complexityData
+) {
+
+    const func =
+        registry.find(
+            f => f.name === functionName &&
+                 f.file === fileName
+        );
+
+    if (func) {
+
+        func.complexity = complexityData;
 
     }
 
@@ -143,6 +219,12 @@ module.exports = {
 
     addThrow,
 
-    markExport
+    markExport,
+
+    addControlFlow,
+
+    addDataFlow,
+
+    addComplexity
 
 };

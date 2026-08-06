@@ -5,44 +5,68 @@ const supportedExtensions = [
     ".js",
     ".ts",
     ".jsx",
-    ".tsx"
+    ".tsx",
+    ".py",
+    ".php",
+    ".java",
+    ".go",
+    ".rs",
+    ".cpp",
+    ".c",
+    ".cs"
 ];
 
-function scanFolder(folderPath, files = []) {
+const ignoredFolders = [
+    "node_modules",
+    ".git",
+    "dist",
+    "build",
+    ".next",
+    "coverage",
+    "generated-tests"
+];
 
-    const items = fs.readdirSync(folderPath);
+/**
+ * Recursively scans a directory for supported source files.
+ * @param {string} folderPath Directory to scan
+ * @param {string[]} customIgnore Optional list of folders/files to ignore
+ * @returns {string[]} Array of absolute file paths
+ */
+function scanFolder(folderPath, customIgnore = []) {
+    
+    // Merge default ignored folders with any custom ones provided by user config
+    const allIgnored = [...ignoredFolders, ...(customIgnore || [])];
 
-    for (const item of items) {
+    function walk(currentDir, files) {
+        if (!fs.existsSync(currentDir)) {
+            console.warn(`Folder not found: ${currentDir}`);
+            return files;
+        }
 
-        const fullPath = path.join(
-            folderPath,
-            item
-        );
+        const items = fs.readdirSync(currentDir);
 
-        const stat =
-            fs.statSync(fullPath);
+        for (const item of items) {
+            if (allIgnored.includes(item)) {
+                continue;
+            }
 
-        if (stat.isDirectory()) {
+            const fullPath = path.join(currentDir, item);
+            const stat = fs.statSync(fullPath);
 
-            scanFolder(
-                fullPath,
-                files
-            );
-
-        } else {
-
-            const ext =
-                path.extname(fullPath);
-
-            if (
-                supportedExtensions.includes(ext)
-            ) {
-                files.push(fullPath);
+            if (stat.isDirectory()) {
+                walk(fullPath, files);
+            } else {
+                const ext = path.extname(fullPath);
+                if (supportedExtensions.includes(ext)) {
+                    files.push(fullPath);
+                }
             }
         }
+
+        return files;
     }
 
-    return files;
+    return walk(folderPath, []);
 }
 
 module.exports = {

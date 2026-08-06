@@ -3,6 +3,10 @@ const {
 } = require("./importParser");
 
 const {
+    parseExports
+} = require("./exportParser");
+
+const {
     addDependency,
     dependencyGraph
 } = require("./dependencyGraph");
@@ -22,21 +26,49 @@ const {
     addCall,
     addCondition,
     addReturn,
-    addThrow
+    addThrow,
+    markExport,
+    addControlFlow,
+    addDataFlow,
+    addComplexity
 } = require("./functionRegistry");
 
 const {
     exportRegistry
 } = require("./exportRegistry");
 
-const project = new Project();
+const {
+    buildCFG
+} = require("./cfgBuilder");
 
-/* ---------------- LOAD ALL FILES ---------------- */
+const {
+    analyzeDataFlow
+} = require("./dataFlowAnalyzer");
 
-const files =
-    scanFolder("./src");
+const {
+    analyzeComplexity
+} = require("./complexityAnalyzer");
 
-for (const file of files) {
+function runParser(targetPath = "./src", verbose = true, ignore = []) {
+
+    function log(...args) {
+        if (verbose) {
+            console.log(...args);
+        }
+    }
+
+    // Reset registry and dependencyGraph if this is called multiple times in same process
+    registry.length = 0;
+    dependencyGraph.length = 0;
+
+    const project = new Project();
+
+    /* ---------------- LOAD ALL FILES ---------------- */
+
+    const files =
+        scanFolder(targetPath, ignore);
+
+    for (const file of files) {
 
     project.addSourceFileAtPath(file);
 
@@ -49,13 +81,16 @@ const sourceFiles =
 
 for (const sourceFile of sourceFiles) {
 
+    const currentFileName =
+        sourceFile.getBaseName();
+
     console.log(
         "\n=================================="
     );
 
     console.log(
         "Parsing:",
-        sourceFile.getBaseName()
+        currentFileName
     );
 
     /* ---------------- IMPORTS ---------------- */
@@ -73,7 +108,7 @@ for (const sourceFile of sourceFiles) {
         );
 
         addDependency(
-            sourceFile.getBaseName(),
+            currentFileName,
             imp.importedFunction,
             imp.sourceFile
         );
@@ -84,6 +119,13 @@ for (const sourceFile of sourceFiles) {
         "=================================="
     );
 
+    /* ---------------- COLLECT ALL FUNCTIONS ---------------- */
+
+    // We collect all function-like nodes with their names and parameters
+    // so semantic analysis runs on ALL of them, not just normal functions.
+
+    const allFunctions = [];
+
     /* ---------------- NORMAL FUNCTIONS ---------------- */
 
     const functions =
@@ -91,36 +133,46 @@ for (const sourceFile of sourceFiles) {
 
     for (const func of functions) {
 
+        const funcName = func.getName();
+
         console.log(
             "\nNormal Function:"
         );
 
         console.log(
             "Name:",
-            func.getName()
+            funcName
         );
 
         const params =
             func.getParameters();
 
-        console.log(
-            "Parameters:",
+        const paramNames =
             params.map(
                 p => p.getName()
-            )
+            );
+
+        console.log(
+            "Parameters:",
+            paramNames
         );
 
         registerFunction(
-            func.getName(),
-            sourceFile.getBaseName(),
+            funcName,
+            currentFileName,
             "normal",
-            params.map(
-                p => p.getName()
-            ),
+            paramNames,
             func.getBody()
                 ? func.getBody().getText()
                 : ""
         );
+
+        // Add to unified list for semantic analysis
+        allFunctions.push({
+            name: funcName,
+            node: func,
+            paramNames: paramNames
+        });
 
     }
 
@@ -140,37 +192,45 @@ for (const sourceFile of sourceFiles) {
                 SyntaxKind.ArrowFunction
         ) {
 
+            const varName = variable.getName();
+
             console.log(
                 "\nArrow Function:"
             );
 
             console.log(
                 "Name:",
-                variable.getName()
+                varName
             );
+
+            const paramNames =
+                initializer
+                    .getParameters()
+                    .map(
+                        p => p.getName()
+                    );
 
             console.log(
                 "Parameters:",
-                initializer
-                    .getParameters()
-                    .map(
-                        p => p.getName()
-                    )
+                paramNames
             );
 
             registerFunction(
-                variable.getName(),
-                sourceFile.getBaseName(),
+                varName,
+                currentFileName,
                 "arrow",
-                initializer
-                    .getParameters()
-                    .map(
-                        p => p.getName()
-                    ),
+                paramNames,
                 initializer
                     .getBody()
                     .getText()
             );
+
+            // Add to unified list for semantic analysis
+            allFunctions.push({
+                name: varName,
+                node: initializer,
+                paramNames: paramNames
+            });
 
         }
 
@@ -193,34 +253,42 @@ for (const sourceFile of sourceFiles) {
 
         for (const method of methods) {
 
+            const methodName = method.getName();
+
             console.log(
                 "Method:",
-                method.getName()
+                methodName
             );
+
+            const paramNames =
+                method
+                    .getParameters()
+                    .map(
+                        p => p.getName()
+                    );
 
             console.log(
                 "Parameters:",
-                method
-                    .getParameters()
-                    .map(
-                        p => p.getName()
-                    )
+                paramNames
             );
 
             registerFunction(
-                method.getName(),
-                sourceFile.getBaseName(),
+                methodName,
+                currentFileName,
                 "class-method",
-                method
-                    .getParameters()
-                    .map(
-                        p => p.getName()
-                    ),
+                paramNames,
                 method
                     .getBody()
                     ? method.getBody().getText()
                     : ""
             );
+
+            // Add to unified list for semantic analysis
+            allFunctions.push({
+                name: methodName,
+                node: method,
+                paramNames: paramNames
+            });
 
         }
 
@@ -253,10 +321,7 @@ for (const sourceFile of sourceFiles) {
         "\nCaller -> Callee Map"
     );
 
-    for (const func of functions) {
-
-        const functionName =
-            func.getName();
+    for (const { name: functionName, node: func } of allFunctions) {
 
         const calls =
             func.getDescendantsOfKind(
@@ -276,6 +341,7 @@ for (const sourceFile of sourceFiles) {
 
             addCall(
                 functionName,
+                currentFileName,
                 calledFunction
             );
 
@@ -289,7 +355,7 @@ for (const sourceFile of sourceFiles) {
         "\nDecision Extraction"
     );
 
-    for (const func of functions) {
+    for (const { name: functionName, node: func } of allFunctions) {
 
         const ifStatements =
             func.getDescendantsOfKind(
@@ -298,7 +364,7 @@ for (const sourceFile of sourceFiles) {
 
         console.log(
             "\nFunction:",
-            func.getName()
+            functionName
         );
 
         for (const ifStatement of ifStatements) {
@@ -314,7 +380,8 @@ for (const sourceFile of sourceFiles) {
             );
 
             addCondition(
-                func.getName(),
+                functionName,
+                currentFileName,
                 condition
             );
 
@@ -328,7 +395,7 @@ for (const sourceFile of sourceFiles) {
         "\nReturn Extraction"
     );
 
-    for (const func of functions) {
+    for (const { name: functionName, node: func } of allFunctions) {
 
         const returns =
             func.getDescendantsOfKind(
@@ -337,7 +404,7 @@ for (const sourceFile of sourceFiles) {
 
         console.log(
             "\nFunction:",
-            func.getName()
+            functionName
         );
 
         for (const ret of returns) {
@@ -355,7 +422,8 @@ for (const sourceFile of sourceFiles) {
                 );
 
                 addReturn(
-                    func.getName(),
+                    functionName,
+                    currentFileName,
                     value
                 );
 
@@ -371,7 +439,7 @@ for (const sourceFile of sourceFiles) {
         "\nThrow Extraction"
     );
 
-    for (const func of functions) {
+    for (const { name: functionName, node: func } of allFunctions) {
 
         const throws =
             func.getDescendantsOfKind(
@@ -380,7 +448,7 @@ for (const sourceFile of sourceFiles) {
 
         console.log(
             "\nFunction:",
-            func.getName()
+            functionName
         );
 
         for (const thr of throws) {
@@ -398,13 +466,112 @@ for (const sourceFile of sourceFiles) {
                 );
 
                 addThrow(
-                    func.getName(),
+                    functionName,
+                    currentFileName,
                     error
                 );
 
             }
 
         }
+
+    }
+
+    /* ---------------- EXPORT DETECTION ---------------- */
+
+    console.log(
+        "\nExport Detection"
+    );
+
+    const exportedNames =
+        parseExports(sourceFile);
+
+    for (const exportedName of exportedNames) {
+
+        console.log(
+            "Exported:",
+            exportedName
+        );
+
+        markExport(
+            exportedName,
+            currentFileName
+        );
+
+    }
+
+    /* ---------------- CONTROL FLOW GRAPH ---------------- */
+
+    console.log(
+        "\nControl Flow Analysis"
+    );
+
+    for (const { name: functionName, node: func } of allFunctions) {
+
+        const cfg = buildCFG(func);
+
+        console.log(
+            `${functionName}: ${cfg.branches.length} branches, ` +
+            `${cfg.loops.length} loops, ` +
+            `${cfg.tryCatch.length} try/catch, ` +
+            `${cfg.pathCount} paths`
+        );
+
+        addControlFlow(
+            functionName,
+            currentFileName,
+            cfg
+        );
+
+    }
+
+    /* ---------------- DATA FLOW ANALYSIS ---------------- */
+
+    console.log(
+        "\nData Flow Analysis"
+    );
+
+    for (const { name: functionName, node: func, paramNames } of allFunctions) {
+
+        const dataFlow =
+            analyzeDataFlow(func, paramNames);
+
+        console.log(
+            `${functionName}: ${dataFlow.variables.length} variables, ` +
+            `${dataFlow.parameterUsage.length} params tracked`
+        );
+
+        addDataFlow(
+            functionName,
+            currentFileName,
+            dataFlow
+        );
+
+    }
+
+    /* ---------------- COMPLEXITY ANALYSIS ---------------- */
+
+    console.log(
+        "\nComplexity Analysis"
+    );
+
+    for (const { name: functionName, node: func } of allFunctions) {
+
+        const complexity =
+            analyzeComplexity(func);
+
+        log(
+            `${functionName}: cyclomatic=${complexity.cyclomatic}, ` +
+            `depth=${complexity.maxNestingDepth}, ` +
+            `LOC=${complexity.linesOfCode}, ` +
+            `[${complexity.classification}]`
+        );
+
+        addComplexity(
+            functionName,
+            currentFileName,
+            complexity
+        );
 
     }
 
@@ -425,7 +592,7 @@ console.log(
 );
 
 console.log(
-    registry
+    JSON.stringify(registry, null, 2)
 );
 
 /* ---------------- DEPENDENCY GRAPH ---------------- */
@@ -446,18 +613,33 @@ console.log(
     dependencyGraph
 );
 
-/* ---------------- EXPORT ANALYSIS ---------------- */
+/* ---------------- EXPORT ANALYSIS TO JSON ---------------- */
 
 exportRegistry();
 
-console.log(
-    "\n=================================="
-);
+    log(
+        "\n=================================="
+    );
 
-console.log(
-    "Analysis Complete"
-);
+    log(
+        "Analysis Complete"
+    );
 
-console.log(
-    "=================================="
-);
+    log(
+        "=================================="
+    );
+
+    return {
+        registry,
+        dependencyGraph
+    };
+
+} // ---------- End of runParser ----------
+
+if (require.main === module) {
+    runParser("./src", true);
+}
+
+module.exports = {
+    runParser
+};
