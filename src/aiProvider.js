@@ -16,6 +16,10 @@ const DEFAULT_MODELS = {
  * Returns the default model for a given provider.
  */
 function getDefaultModel(provider) {
+    if (provider === "gemini" && process.env.GEMINI_MODEL) return process.env.GEMINI_MODEL;
+    if (provider === "openai" && process.env.OPENAI_MODEL) return process.env.OPENAI_MODEL;
+    if (provider === "anthropic" && process.env.ANTHROPIC_MODEL) return process.env.ANTHROPIC_MODEL;
+
     return DEFAULT_MODELS[provider] || DEFAULT_MODELS.gemini;
 }
 
@@ -41,11 +45,11 @@ async function generateWithAI(prompt, options = {}) {
 
     switch (provider) {
         case "gemini":
-            return await callGemini(prompt, apiKey, model);
+            return await callGemini(prompt, apiKey, model, options);
         case "openai":
-            return await callOpenAI(prompt, apiKey, model);
+            return await callOpenAI(prompt, apiKey, model, options);
         case "anthropic":
-            return await callAnthropic(prompt, apiKey, model);
+            return await callAnthropic(prompt, apiKey, model, options);
         default:
             throw new Error(`Unknown provider "${provider}". Supported: gemini, openai, anthropic`);
     }
@@ -53,13 +57,20 @@ async function generateWithAI(prompt, options = {}) {
 
 /* ===================== GEMINI ===================== */
 
-async function callGemini(prompt, apiKey, model) {
+async function callGemini(prompt, apiKey, model, options = {}) {
     const { GoogleGenAI } = require("@google/genai");
     const ai = new GoogleGenAI({ apiKey });
 
+    const systemPrompt = `You are an expert software test engineer. Generate only raw test code suitable for a ${options.ext || '.js'} file. Do not include markdown formatting. 
+When generating tests for React components using @testing-library/react, always include \`import '@testing-library/jest-dom';\` at the top of the file so matchers like toBeInTheDocument and toHaveClass are available.
+When asserting props on mocked React components, DO NOT use \`toHaveBeenCalledWith\`. Instead, verify the first argument directly using \`expect(Component.mock.calls[0][0]).toEqual(expect.objectContaining({...}))\` to avoid issues with React passing \`undefined\` as a second argument.`;
+
     const response = await ai.models.generateContent({
         model: model,
-        contents: prompt
+        contents: prompt,
+        config: {
+            systemInstruction: systemPrompt
+        }
     });
 
     return response.text || "";
@@ -67,7 +78,7 @@ async function callGemini(prompt, apiKey, model) {
 
 /* ===================== OPENAI ===================== */
 
-async function callOpenAI(prompt, apiKey, model) {
+async function callOpenAI(prompt, apiKey, model, options = {}) {
     let OpenAI;
     try {
         OpenAI = require("openai");
@@ -81,12 +92,16 @@ async function callOpenAI(prompt, apiKey, model) {
 
     const client = new OpenAI({ apiKey });
 
+    const systemPrompt = `You are an expert software test engineer. Generate only raw test code suitable for a ${options.ext || '.js'} file. Do not include markdown formatting. 
+When generating tests for React components using @testing-library/react, always include \`import '@testing-library/jest-dom';\` at the top of the file so matchers like toBeInTheDocument and toHaveClass are available.
+When asserting props on mocked React components, DO NOT use \`toHaveBeenCalledWith\`. Instead, verify the first argument directly using \`expect(Component.mock.calls[0][0]).toEqual(expect.objectContaining({...}))\` to avoid issues with React passing \`undefined\` as a second argument.`;
+
     const response = await client.chat.completions.create({
         model: model,
         messages: [
             {
                 role: "system",
-                content: "You are an expert software test engineer. Generate only raw JavaScript test code. Do not include markdown formatting."
+                content: systemPrompt
             },
             {
                 role: "user",
@@ -101,7 +116,7 @@ async function callOpenAI(prompt, apiKey, model) {
 
 /* ===================== ANTHROPIC ===================== */
 
-async function callAnthropic(prompt, apiKey, model) {
+async function callAnthropic(prompt, apiKey, model, options = {}) {
     let Anthropic;
     try {
         ({ default: Anthropic } = require("@anthropic-ai/sdk"));
@@ -119,6 +134,10 @@ async function callAnthropic(prompt, apiKey, model) {
 
     const client = new Anthropic({ apiKey });
 
+    const systemPrompt = `You are an expert software test engineer. Generate only raw test code suitable for a ${options.ext || '.js'} file. Do not include markdown formatting. 
+When generating tests for React components using @testing-library/react, always include \`import '@testing-library/jest-dom';\` at the top of the file so matchers like toBeInTheDocument and toHaveClass are available.
+When asserting props on mocked React components, DO NOT use \`toHaveBeenCalledWith\`. Instead, verify the first argument directly using \`expect(Component.mock.calls[0][0]).toEqual(expect.objectContaining({...}))\` to avoid issues with React passing \`undefined\` as a second argument.`;
+
     const response = await client.messages.create({
         model: model,
         max_tokens: 8192,
@@ -128,7 +147,7 @@ async function callAnthropic(prompt, apiKey, model) {
                 content: prompt
             }
         ],
-        system: "You are an expert software test engineer. Generate only raw JavaScript test code. Do not include markdown formatting."
+        system: systemPrompt
     });
 
     // Claude returns content as an array of content blocks
@@ -141,3 +160,4 @@ module.exports = {
     getDefaultModel,
     DEFAULT_MODELS
 };
+    

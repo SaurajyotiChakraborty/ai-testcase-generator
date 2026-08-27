@@ -4,3 +4,7 @@ node_modules/
 generated-tests/
 analysis.json
 PROJECT_MASTER_SPEC.md
+.env.local
+*.md
+!README.md
+test-sandbox/

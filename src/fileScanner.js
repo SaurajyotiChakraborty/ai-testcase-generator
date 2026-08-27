@@ -37,6 +37,20 @@ function scanFolder(folderPath, customIgnore = []) {
     // Merge default ignored folders with any custom ones provided by user config
     const allIgnored = [...ignoredFolders, ...(customIgnore || [])];
 
+    if (!fs.existsSync(folderPath)) {
+        console.warn(`Folder or file not found: ${folderPath}`);
+        return [];
+    }
+
+    const targetStat = fs.statSync(folderPath);
+    if (targetStat.isFile()) {
+        const ext = path.extname(folderPath);
+        if (supportedExtensions.includes(ext)) {
+            return [path.resolve(folderPath)];
+        }
+        return [];
+    }
+
     function walk(currentDir, files) {
         if (!fs.existsSync(currentDir)) {
             console.warn(`Folder not found: ${currentDir}`);

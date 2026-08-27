@@ -5,7 +5,8 @@ function registerFunction(
     file,
     type,
     parameters,
-    body
+    body,
+    isAsync = false
 ) {
 
     registry.push({
@@ -13,6 +14,7 @@ function registerFunction(
         name,
         file,
         type,
+        isAsync,
 
         parameters,
 

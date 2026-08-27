@@ -1,39 +1,47 @@
 {
-  "name": "ai-testcase-generator",
-  "version": "1.0.0",
-  "main": "src/parser.js",
+  "name": "codecase-ai",
+  "version": "1.0.34",
+  "main": "src/index.js",
   "bin": {
-    "ai-testcase-generator": "./src/cli.js"
+    "codecase-ai": "bin/cli.js",
+    "generate-tests": "bin/cli.js"
   },
   "scripts": {
-    "analyze": "node src/parser.js",
-    "generate": "node src/generateTestCases.js",
-    "start": "node src/cli.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node bin/cli.js",
+    "test": "jest ./generated-tests",
+    "test:check": "node final-check.js"
   },
   "keywords": [
     "testing",
     "ai",
     "gemini",
+    "openai",
+    "anthropic",
     "test-generation",
     "unit-tests",
     "ast",
     "ts-morph",
     "jest",
-    "vitest"
+    "vitest",
+    "mocha",
+    "react-testing-library",
+    "nextjs",
+    "typescript"
   ],
-  "author": "SaurajyotiChakraborty",
+  "author": "saurajyotichakraborty",
   "license": "ISC",
   "description": "Automatically generate comprehensive, framework-aware unit tests using AI and deep AST parsing.",
   "dependencies": {
     "@google/genai": "^2.15.0",
+    "chalk": "^4.1.2",
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
+    "inquirer": "^8.2.6",
     "ts-morph": "^28.0.0"
   },
   "peerDependencies": {
-    "openai": ">=4.0.0",
-    "@anthropic-ai/sdk": ">=0.20.0"
+    "@anthropic-ai/sdk": ">=0.20.0",
+    "openai": ">=4.0.0"
   },
   "peerDependenciesMeta": {
     "openai": {
@@ -42,5 +50,22 @@
     "@anthropic-ai/sdk": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@clerk/nextjs": "^7.8.2",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.6",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "next": "^16.3.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "whatwg-fetch": "^3.6.20"
   }
 }

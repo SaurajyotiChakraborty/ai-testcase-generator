@@ -3,23 +3,21 @@ const path = require("path");
 
 function writeTestFile(testCode, fileName, outputDir) {
 
-    const testFileName =
-        fileName.replace(
-            path.extname(fileName),
-            ".test.js"
-        );
+    const testFileName = fileName;
+
 
     const outputFolder = outputDir || "./generated-tests";
-
-    if (!fs.existsSync(outputFolder)) {
-        fs.mkdirSync(outputFolder, { recursive: true });
-    }
 
     const outputPath =
         path.join(
             outputFolder,
             testFileName
         );
+        
+    const finalDir = path.dirname(outputPath);
+    if (!fs.existsSync(finalDir)) {
+        fs.mkdirSync(finalDir, { recursive: true });
+    }
 
     fs.writeFileSync(
         outputPath,

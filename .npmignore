@@ -1,14 +1,14 @@
 .env
+.env.local
 .aitestcache.json
+.aitestgenrc.json
 generated-tests/
 analysis.json
 PROJECT_MASTER_SPEC.md
+.agents/
+test-sample-pages/
 *.test.js
-
-# Sample / debug files (not needed by end users)
-src/auth.js
-src/login.js
-src/sample.js
-src/testPrompt.js
-src/testScanner.js
-src/generatePrompt.js
+*.test.tsx
+final-check.js
+jest.setup.js
+jest.config.js

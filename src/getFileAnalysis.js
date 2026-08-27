@@ -4,9 +4,18 @@ function getFileAnalysis(fileName) {
 
     const analysis = readAnalysis();
 
-    return analysis.filter(
+    const fileFunctions = analysis.registry.filter(
         item => item.file === fileName
     );
+
+    const fileDependencies = analysis.dependencyGraph.filter(
+        item => item.fromFile === fileName
+    );
+
+    return fileFunctions.map(func => ({
+        ...func,
+        dependencies: fileDependencies
+    }));
 
 }
 

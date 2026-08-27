@@ -14,6 +14,15 @@ function parseImports(sourceFile) {
         const moduleName =
             declaration.getModuleSpecifierValue();
 
+        const defaultImport = declaration.getDefaultImport();
+        if (defaultImport) {
+            imports.push({
+                importedFunction: defaultImport.getText(),
+                sourceFile: moduleName,
+                isDefault: true
+            });
+        }
+
         for (const namedImport of declaration.getNamedImports()) {
 
             imports.push({
@@ -22,7 +31,9 @@ function parseImports(sourceFile) {
                     namedImport.getName(),
 
                 sourceFile:
-                    moduleName
+                    moduleName,
+                
+                isDefault: false
 
             });
 

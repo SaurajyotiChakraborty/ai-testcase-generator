@@ -1,105 +1,355 @@
-# ai-testcase-generator
+# codecase-ai
 
-**Automatically generate comprehensive, framework-aware unit tests using AI.**
+> AI-powered unit test generator for JavaScript and TypeScript projects.
 
-`ai-testcase-generator` analyzes your JavaScript/TypeScript project using deep AST parsing to extract control flow, data flow, and complexity metrics. It then uses this deep semantic understanding to generate robust test suites via your choice of AI provider.
+Analyzes your source files, understands your exports, hooks, and components,  
+and writes complete test cases automatically — no configuration required.
 
-## Features
+---
 
-- 🧠 **Deep Semantic Parsing**: Uses `ts-morph` to extract functions, classes, conditionals, loops, returns, throws, and execution paths.
-- 🚦 **Control Flow Graph (CFG)**: Analyzes branches and loops to ensure generated tests hit all execution paths.
-- 📦 **Data Flow Analysis**: Tracks variable reassignments and parameter usage to generate precise edge-case tests.
-- ⚙️ **Framework Auto-Detection**: Automatically detects if you're using **Jest**, **Vitest**, **Mocha**, or **Jasmine** and formats tests accordingly.
-- 🤖 **Multi-Provider AI**: Supports **Google Gemini**, **OpenAI (ChatGPT)**, and **Anthropic (Claude)**.
-- 🏗️ **Dependency Graph**: Automatically adds correct `require()` / `import` statements into the generated test files.
-- 📊 **Complexity Driven**: Computes cyclomatic complexity and nesting depth to prioritize thoroughness.
-- ⚡ **Parallel Processing**: Processes multiple files concurrently for faster generation.
-- 💾 **Incremental Caching**: Skips unchanged files to save time and API tokens.
+## Table of Contents
 
-## Installation
+- [Install](#install)
+- [Setup](#setup)
+- [Add Your API Key](#add-your-api-key)
+- [Generate Tests](#generate-tests)
+- [All Commands](#all-commands)
+- [All Options](#all-options)
+- [Framework Selection](#framework-selection)
+- [Supported Frameworks](#supported-frameworks)
+- [Supported AI Providers](#supported-ai-providers)
+- [Configuration File](#configuration-file)
+- [How It Works](#how-it-works)
+- [Security](#security)
+
+---
+
+## Install
+
+You do not need to install anything to get started. Use `npx`:
 
 ```bash
-npm install -D ai-testcase-generator
+npx codecase-ai init
 ```
 
-## Supported AI Providers
+Or install globally so you can use it without `npx`:
 
-| Provider | Install Command | Default Model |
-|----------|----------------|---------------|
-| **Google Gemini** (default) | Included automatically | `gemini-3.6-flash` |
-| **OpenAI / ChatGPT** | `npm install openai` | `gpt-5.6-luna` |
-| **Anthropic / Claude** | `npm install @anthropic-ai/sdk` | `claude-sonnet-5` |
+```bash
+npm install -g codecase-ai
+```
 
-You only need to install the SDK for the provider you want to use. Gemini works out of the box.
+After global install, use `codecase-ai` directly:
+
+```bash
+codecase-ai init
+codecase-ai run
+```
+
+---
 
 ## Setup
 
-Provide your API key in one of three ways:
-
-1. **Environment Variable**: `GEMINI_API_KEY`, `OPENAI_API_KEY`, or `ANTHROPIC_API_KEY`
-2. **CLI Flag**: `--api-key your_key_here`
-3. **Config File**: Add `apiKey` to `aitest.config.js`
-
-## Quick Start
+Run the setup wizard once in your project folder:
 
 ```bash
-# Using Gemini (default)
-npx ai-testcase-generator --api-key YOUR_GEMINI_KEY
-
-# Using OpenAI
-npx ai-testcase-generator --provider openai --api-key YOUR_OPENAI_KEY
-
-# Using Claude
-npx ai-testcase-generator --provider anthropic --api-key YOUR_ANTHROPIC_KEY
+npx codecase-ai init
 ```
 
-Tests will be generated in the `./generated-tests` folder.
+This will:
 
-## CLI Options
+1. Ask you to choose an AI provider (Gemini, OpenAI, or Claude)
+2. Ask for your API key (stored safely in `.env.local`, never shown in terminal)
+3. Ask which test framework to use (Jest, Vitest, or Mocha)
+4. Ask which folder to scan (default: `src/`)
+5. Save your choices to `.aitestgenrc.json`
+
+After setup, you can run test generation anytime with:
 
 ```bash
-ai-testcase-generator [path] [options]
-
-Arguments:
-  path                        Target directory or file to analyze (default: "./src")
-
-Options:
-  -V, --version               Output the version number
-  -p, --provider <name>       AI provider: gemini, openai, anthropic (default: "gemini")
-  -f, --framework <name>      Testing framework: jest, vitest, mocha, jasmine, auto (default: "auto")
-  -o, --output <dir>          Output directory (default: "generated-tests")
-  -m, --model <name>          AI model to use (auto-selects best for provider)
-  -k, --api-key <key>         API Key for the selected provider
-  -a, --analyze-only          Run analysis only, do not generate tests
-  -i, --ignore <paths...>     Additional folders/files to ignore
-  -c, --concurrency <number>  Number of concurrent files to process (default: 3)
-  --no-cache                  Disable incremental caching and force regeneration
-  -v, --verbose               Enable verbose logging
-  -h, --help                  Display help
+npx codecase-ai run
 ```
+
+---
+
+## Add Your API Key
+
+Create a `.env.local` file in your project root and add your key:
+
+```
+# Google Gemini (free, recommended)
+GEMINI_API_KEY=your_key_here
+
+# OpenAI (GPT-4o)
+OPENAI_API_KEY=your_key_here
+
+# Anthropic Claude
+ANTHROPIC_API_KEY=your_key_here
+```
+
+> Add `.env.local` to your `.gitignore` so the key is never committed.
+
+Get a free Gemini key at: [aistudio.google.com/app/apikey](https://aistudio.google.com/app/apikey)
+
+Your API key is **never printed to the terminal** at any point.
+
+---
+
+## Generate Tests
+
+### Generate for your whole project
+
+```bash
+npx codecase-ai run
+```
+
+### Generate for a single file
+
+```bash
+npx codecase-ai run src/utils/format.ts
+```
+
+### Generate for a specific folder
+
+```bash
+npx codecase-ai run src/components/
+```
+
+### Skip all confirmation prompts
+
+```bash
+npx codecase-ai run --yes
+```
+
+### Choose a specific test framework
+
+```bash
+npx codecase-ai run --framework jest
+npx codecase-ai run --framework vitest
+npx codecase-ai run --framework mocha
+```
+
+### Use a specific AI provider
+
+```bash
+npx codecase-ai run --provider gemini
+npx codecase-ai run --provider openai
+npx codecase-ai run --provider claude
+```
+
+### Change output folder
+
+```bash
+npx codecase-ai run --output tests/
+```
+
+---
+
+## All Commands
+
+| Command | What it does |
+|---|---|
+| `npx codecase-ai init` | First-time setup wizard |
+| `npx codecase-ai run` | Generate tests for your project |
+| `npx codecase-ai run <path>` | Generate tests for a file or folder |
+| `npx codecase-ai --version` | Print the installed version |
+| `npx codecase-ai --help` | Print all available options |
+
+---
+
+## All Options
+
+These options work with the `run` command:
+
+| Option | Short | Description | Default |
+|---|---|---|---|
+| `--framework <name>` | `-f` | Test runner: `jest`, `vitest`, `mocha` | auto-detect |
+| `--provider <name>` | `-p` | AI provider: `gemini`, `openai`, `claude` | `gemini` |
+| `--output <dir>` | `-o` | Output directory for test files | `generated-tests` |
+| `--concurrency <n>` | `-c` | Files to process at once | `1` |
+| `--yes` | `-y` | Skip all confirmation prompts | off |
+| `--path <path>` | | File or folder to scan | `.aitestgenrc.json` value |
+| `--api-key <key>` | `-k` | API key (prefer `.env.local` instead) | — |
+
+**Examples:**
+
+```bash
+# Run with all options
+npx codecase-ai run src/ --framework jest --provider gemini --output tests/ --yes
+
+# Run a single file, skip prompts
+npx codecase-ai run src/api/users.ts --yes
+
+# Run with OpenAI on a specific folder
+npx codecase-ai run src/hooks/ --provider openai --framework jest
+```
+
+---
+
+## Framework Selection
+
+When you run `npx codecase-ai run`, the tool auto-detects your test framework  
+from your `package.json`, config files, and dependencies.
+
+If it detects a framework, it shows what it found:
+
+```
+  Provider : gemini  |  Runner: jest  |  Output: generated-tests
+```
+
+If it cannot detect the framework clearly, it shows a selection menu:
+
+```
+? Select test framework (auto-detected: jest):
+❯ Jest       — use Jest (auto-detected)
+  Vitest     — use Vitest
+  Mocha      — use Mocha + Chai
+```
+
+To skip the menu, pass `--framework` directly:
+
+```bash
+npx codecase-ai run --framework vitest
+```
+
+Or save it permanently in `.aitestgenrc.json`:
+
+```json
+{
+  "testRunner": "vitest"
+}
+```
+
+---
+
+## Supported Frameworks
+
+| Project type | Detected | Test files generated |
+|---|---|---|
+| Next.js | ✅ | `.test.tsx` (Jest) |
+| React + CRA | ✅ | `.test.tsx` (Jest) |
+| React + Vite | ✅ | `.test.tsx` (Vitest) |
+| Vue | ✅ | `.test.ts` |
+| Nuxt | ✅ | `.test.ts` |
+| Angular | ✅ | `.spec.ts` |
+| Svelte / SvelteKit | ✅ | `.test.ts` |
+| Remix | ✅ | `.test.tsx` |
+| Astro | ✅ | `.test.ts` |
+| Express | ✅ | `.test.js` |
+| NestJS | ✅ | `.test.ts` |
+| Plain Node.js | ✅ | `.test.js` or `.test.ts` |
+
+---
+
+## Supported AI Providers
+
+| Provider | Default model | Key variable | Free tier |
+|---|---|---|---|
+| **Gemini** *(recommended)* | `gemini-2.5-flash` | `GEMINI_API_KEY` | ✅ Yes |
+| **OpenAI** | `gpt-4o` | `OPENAI_API_KEY` | ❌ Paid |
+| **Claude** | `claude-3-5-sonnet` | `ANTHROPIC_API_KEY` | ❌ Paid |
+
+**Extra install for OpenAI or Claude:**
+
+```bash
+npm install openai              # for OpenAI
+npm install @anthropic-ai/sdk   # for Claude
+```
+
+---
 
 ## Configuration File
 
-Instead of passing CLI flags every time, you can create an `aitest.config.js` (or `.json`) file in the root of your project:
+Running `init` creates `.aitestgenrc.json` in your project root:
 
-```javascript
-// aitest.config.js
-module.exports = {
-    provider: "openai",
-    apiKey: "sk-...",
-    model: "gpt-5.6-luna",
-    target: "./src",
-    output: "./tests/__ai__",
-    framework: "jest",
-    ignore: ["migrations", "scripts"],
-    concurrency: 3
-};
+```json
+{
+  "provider": "gemini",
+  "testRunner": "jest",
+  "targetPath": "src/",
+  "outputDir": "generated-tests",
+  "concurrency": 1,
+  "ignore": []
+}
 ```
 
-CLI flags will override settings in the config file.
+You can edit this file manually at any time.
+
+**`ignore` examples:**
+
+```json
+{
+  "ignore": ["src/generated/", "src/mocks/", "src/types/"]
+}
+```
+
+CLI flags always override the config file values.
+
+---
 
 ## How It Works
 
-1. **Phase 1 (Static Analysis)**: The tool recursively scans your target directory, parsing all JS/TS files. It extracts a complete internal metadata registry of every normal function, arrow function, and class method. It builds a Control Flow Graph, tracks data flow, and maps out a file-dependency graph.
-2. **Phase 2 (AI Generation)**: The deep semantic analysis is compiled into a highly structured prompt (per-function) and sent to your chosen AI provider. The LLM generates Positive, Negative, Edge, and Exception test cases.
-3. **Phase 3 (Writing)**: The raw generated code is saved into `.test.js` files, complete with appropriate framework imports and `describe/it` blocks.
+```
+Your source file
+      │
+      ▼
+  AST Parser         — reads code structure (not regex)
+      │
+      ▼
+ Export Extractor    — finds exported functions, components, hooks
+      │
+      ▼
+ Context Builder     — includes direct imports as context
+      │
+      ▼
+  AI Generator       — sends grounded prompt to Gemini / OpenAI / Claude
+      │
+      ▼
+  Validator          — checks syntax, imports, secrets, dangerous code
+      │
+      ▼
+ Approval Prompt     — asks before writing (unless --yes)
+      │
+      ▼
+  Test File          — saved to generated-tests/
+```
+
+**What is analyzed:**
+
+- Exported functions and their signatures
+- React components, hooks, context providers
+- Next.js routes (including dynamic `[id]`, route groups `(group)`)
+- Direct import dependencies (1 level deep)
+- Your `package.json` dependency list
+- Your Jest / Vitest / tsconfig configuration
+
+---
+
+## Security
+
+### API key
+
+- Never printed to the terminal
+- Never stored in generated test files
+- Read only from `.env.local`, `.env`, or the `--api-key` flag (masked)
+- Sent only to the AI provider over HTTPS
+
+### Generated test safety
+
+Before saving any test file, the generator checks for:
+
+| Check | What it looks for |
+|---|---|
+| **Syntax validation** | TypeScript AST parse — rejects malformed code |
+| **Hallucination check** | Rejects tests that import names your file doesn't export |
+| **Secret detection** | Rejects hardcoded API keys, tokens, passwords |
+| **Dangerous patterns** | Rejects `eval()`, `exec()`, `child_process`, `fs.writeFileSync()` |
+| **Style assertions** | Warns if tests check Tailwind CSS classes instead of behavior |
+| **Generic names** | Warns if test names are `test1`, `works`, `button test` |
+
+Files that fail security checks are **never written to disk**.
+
+---
+
+## License
+
+ISC — free for personal and commercial use.

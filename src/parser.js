@@ -81,8 +81,9 @@ const sourceFiles =
 
 for (const sourceFile of sourceFiles) {
 
-    const currentFileName =
-        sourceFile.getBaseName();
+    const currentFileName = sourceFile.getBaseName();
+
+    try {
 
     console.log(
         "\n=================================="
@@ -164,7 +165,8 @@ for (const sourceFile of sourceFiles) {
             paramNames,
             func.getBody()
                 ? func.getBody().getText()
-                : ""
+                : "",
+            func.isAsync ? func.isAsync() : false
         );
 
         // Add to unified list for semantic analysis
@@ -222,7 +224,8 @@ for (const sourceFile of sourceFiles) {
                 paramNames,
                 initializer
                     .getBody()
-                    .getText()
+                    .getText(),
+                initializer.isAsync ? initializer.isAsync() : false
             );
 
             // Add to unified list for semantic analysis
@@ -280,7 +283,8 @@ for (const sourceFile of sourceFiles) {
                 method
                     .getBody()
                     ? method.getBody().getText()
-                    : ""
+                    : "",
+                method.isAsync ? method.isAsync() : false
             );
 
             // Add to unified list for semantic analysis
@@ -483,8 +487,12 @@ for (const sourceFile of sourceFiles) {
         "\nExport Detection"
     );
 
-    const exportedNames =
-        parseExports(sourceFile);
+    let exportedNames = [];
+    try {
+        exportedNames = parseExports(sourceFile);
+    } catch (exportErr) {
+        console.warn(`  ⚠️  Could not parse exports for ${currentFileName}: ${exportErr.message}`);
+    }
 
     for (const exportedName of exportedNames) {
 
@@ -573,6 +581,10 @@ for (const sourceFile of sourceFiles) {
             complexity
         );
 
+    }
+
+    } catch (fileErr) {
+        console.warn(`\n  ⚠️  Skipping ${currentFileName} — parse error: ${fileErr.message}`);
     }
 
 } // ---------- End of sourceFile loop ----------
